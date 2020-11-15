@@ -2,7 +2,7 @@ server:
   port: 8081
 
 db:
-  host: ${DB_HOST:localhost}
+  host: ${DB_HOST:postgres}
   port: 5432
   login: ${DB_LOGIN:postgres}
   password: ${DB_PASSWORD:password}
