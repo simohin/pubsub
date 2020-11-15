@@ -1,1 +1,11 @@
+server:
+  port: 8080
+
+subscriber:
+  url: http://localhost:8081/event
+
+publisher:
+  interThreadSleep: 15000
+  poolSize: 5
+
 
