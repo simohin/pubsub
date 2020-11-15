@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.extern.slf4j.Slf4j;
 import simohin.subscriber.domain.Event;
 import simohin.subscriber.entity.Purchase;
+import simohin.subscriber.entity.Subscription;
 import simohin.subscriber.processor.EventProcessor;
 
 /**
@@ -20,10 +21,15 @@ public class EventController {
 
     private final EventProcessor<Purchase> purchaseProcessor;
 
+    private final EventProcessor<Subscription> subscriptionProcessor;
+
     public EventController(
-            @Qualifier(value = "purchaseProcessor") EventProcessor<Purchase> purchaseProcessor) {
+            @Qualifier(value = "purchaseProcessor") EventProcessor<Purchase> purchaseProcessor,
+            @Qualifier(value = "subscriptionProcessor") EventProcessor<
+                    Subscription> subscriptionProcessor) {
 
         this.purchaseProcessor = purchaseProcessor;
+        this.subscriptionProcessor = subscriptionProcessor;
     }
 
     @PostMapping("/event")
@@ -34,6 +40,9 @@ public class EventController {
         switch (e.getAction()) {
             case PURCHASE:
                 purchaseProcessor.process(e);
+            case SUBSCRIPTION:
+                subscriptionProcessor.process(e);
+
         }
 
     }

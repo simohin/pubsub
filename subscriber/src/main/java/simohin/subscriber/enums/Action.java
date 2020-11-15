@@ -6,5 +6,6 @@ package simohin.subscriber.enums;
  */
 public enum Action {
 
-    PURCHASE
+    PURCHASE,
+    SUBSCRIPTION
 }
