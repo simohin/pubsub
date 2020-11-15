@@ -1,1 +1,12 @@
+server:
+  port: 8081
 
+db:
+  host: ${DB_HOST:localhost}
+  port: 5432
+  login: ${DB_LOGIN:postgres}
+  password: ${DB_PASSWORD:password}
+  databasename: ${DB_NAME:postgres}
+  connection_pool_size: 20
+  connection_pool_min_idle: 1
+  connection_timeout: 60000

@@ -1,4 +1,4 @@
-package simohin.subscriber.entity;
+package simohin.subscriber.domain;
 
 import java.io.Serializable;
 

@@ -5,7 +5,6 @@ package simohin.subscriber.enums;
  * @created 14.11.2020
  */
 public enum Action {
-    PURCHASE,
-    SUBSCRIPTION
 
+    PURCHASE
 }
