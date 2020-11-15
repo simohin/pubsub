@@ -40,9 +40,13 @@ public class EventController {
         switch (e.getAction()) {
             case PURCHASE:
                 purchaseProcessor.process(e);
+                break;
             case SUBSCRIPTION:
                 subscriptionProcessor.process(e);
-
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Unexpected action: " + e.getAction().toString());
         }
 
     }
