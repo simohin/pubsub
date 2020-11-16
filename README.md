@@ -11,7 +11,7 @@
 ### Логи
 
 `docker-compose logs -f publisher`
-`docker-compose logs -f supscriber`
+`docker-compose logs -f subscriber`
 
 ### Остановить
 
