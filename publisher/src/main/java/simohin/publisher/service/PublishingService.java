@@ -1,5 +1,8 @@
 package simohin.publisher.service;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Random;
@@ -30,8 +33,6 @@ import simohin.publisher.enums.Action;
 @Slf4j
 public class PublishingService extends Thread implements InitializingBean {
 
-    protected final IdGeneratorService idGenerator;
-
     private final ExecutorService pool;
 
     @Value("${publisher.interThreadSleep}")
@@ -39,11 +40,8 @@ public class PublishingService extends Thread implements InitializingBean {
 
     private final URI subscriberUrl;
 
-    public PublishingService(IdGeneratorService idGenerator,
-            @Value("${publisher.poolSize}") Integer poolSize,
+    public PublishingService(@Value("${publisher.poolSize}") Integer poolSize,
             @Value("${subscriber.url}") String subscriberUrl) throws URISyntaxException {
-
-        this.idGenerator = idGenerator;
 
         this.pool = Executors.newFixedThreadPool(poolSize);
 
@@ -53,22 +51,34 @@ public class PublishingService extends Thread implements InitializingBean {
     @Override
     public void run() {
 
-        for (;;) {
-            var id = idGenerator.getNextId();
-            pool.execute(new Publishing(id, interThreadSleep, subscriberUrl));
+        while (true) {
+            pool.execute(new Publishing(interThreadSleep, subscriberUrl));
         }
     }
 
     @Override
-    public void afterPropertiesSet() {
+    public void afterPropertiesSet() throws InterruptedException {
 
         log.info("Running publishing");
+        while (!pingHost()) {
+            log.info("Waiting for subscriber");
+            Thread.sleep(300L);
+        }
         start();
     }
 
-    static class Publishing implements Runnable {
+    private boolean pingHost() {
 
-        private final Long id;
+        try (Socket socket = new Socket()) {
+            socket.connect(
+                    new InetSocketAddress(subscriberUrl.getHost(), subscriberUrl.getPort()));
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    static class Publishing implements Runnable {
 
         private final Long sleep;
 
@@ -80,9 +90,8 @@ public class PublishingService extends Thread implements InitializingBean {
 
         private final ObjectMapper m = new ObjectMapper();
 
-        public Publishing(Long id, Long sleep, URI url) {
+        public Publishing(Long sleep, URI url) {
 
-            this.id = id;
             this.sleep = sleep;
             this.url = url;
         }
@@ -91,15 +100,14 @@ public class PublishingService extends Thread implements InitializingBean {
         public void run() {
 
             try {
-                publish(id);
+                publish(IdGenerator.getNextId());
+                Thread.sleep(sleep);
             } catch (Exception e) {
                 log.error(e.getMessage());
             }
         }
 
-        public void publish(Long id) throws InterruptedException, JsonProcessingException {
-
-            log.info("Publishing event id={} in thread {}", id, Thread.currentThread().getName());
+        public void publish(Long id) throws JsonProcessingException {
 
             var values = Action.values();
 
@@ -109,12 +117,24 @@ public class PublishingService extends Thread implements InitializingBean {
 
             var headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setConnection("close");
             var entity = new HttpEntity<>(json, headers);
 
             restTemplate.postForObject(url, entity, HttpEntity.class);
 
-            Thread.sleep(sleep);
+            log.info("Published event id={} in thread {}", id, Thread.currentThread().getName());
         }
+    }
+
+    static class IdGenerator {
+
+        private static volatile Long nextId = 0L;
+
+        public static synchronized Long getNextId() {
+
+            return nextId++;
+        }
+
     }
 
 }

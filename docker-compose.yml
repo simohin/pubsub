@@ -10,16 +10,15 @@ services:
     ports:
       - 5432:5432
   subscriber:
-    build:
-      dockerfile: Dockerfile
-      context: ./subscriber/
+    build: ./subscriber/
     container_name: subscriber
     depends_on:
       - postgres
   publisher:
-    build:
-      dockerfile: Dockerfile
-      context: ./publisher/
+    build: ./publisher/
+    restart: on-failure
     container_name: publisher
     depends_on:
+      - subscriber
+    links:
       - subscriber
